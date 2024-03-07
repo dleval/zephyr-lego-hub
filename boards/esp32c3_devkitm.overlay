@@ -1,0 +1,17 @@
+/ {
+  chosen {
+    zephyr,shell-uart = &usb_serial;
+    zephyr,console = &usb_serial;
+  };
+  leds {
+    compatible = "gpio-leds";
+    blinking_led: blinking_led {
+      gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
+    };
+  };
+};
+
+&usb_serial {
+      status = "okay";
+      current-speed = <115200>;
+};
