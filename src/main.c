@@ -8,7 +8,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 
-#include "ble.h"
+#include "hub.h"
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
@@ -37,7 +37,7 @@ int main(void)
     k_msleep(SLEEP_TIME_MS);
     printf("\nESP32 Lego Hub\n");
 
-    init_ble();
+    hub_init();
 
 	while (1) {
 		ret = gpio_pin_toggle_dt(&led);

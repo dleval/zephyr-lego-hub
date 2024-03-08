@@ -8,6 +8,7 @@
 #include <zephyr/bluetooth/gatt.h>
 
 #include "ble.h"
+#include "lwp.h"
 
 /* Button value. */
 static uint16_t but_val;
@@ -54,6 +55,8 @@ static void mpu_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value)
 	ARG_UNUSED(attr);
 	notify_enable = (value == BT_GATT_CCC_NOTIFY);
 	printf("Notification %s\n", notify_enable ? "enabled" : "disabled");
+    // static uint8_t resp_data[0x0F] = {0x0F, 0x00, 0x04, 0x00, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10};
+    // if(notify_enable) bt_gatt_notify(NULL, attr, resp_data, 0x0F);
 }
 
 /* The embedded board is acting as GATT server.
@@ -78,11 +81,21 @@ static ssize_t gatt_write_callback(struct bt_conn *conn,
 		    const struct bt_gatt_attr *attr, const void *buf,
 		    uint16_t len, uint16_t offset, uint8_t flags)
 {
+    static uint8_t resp_data[LWP_MSG_DATA_SIZE_MAX];
+    static uint16_t resp_size;
     printf("gatt_write_callback, len: %d, offset %d\n", len, offset);
     for(uint16_t i = offset; i<len; i++) {
         printf("%02X ", ((uint8_t*)buf)[i]);
     }
     printf("\n");
+    if(lwp_message_income((uint8_t*)buf, len, resp_data, &resp_size) == LWP_STATUS_RESP) {
+        printf("Response (size=%d): ", resp_size);
+        for(uint16_t i = 0; i<resp_size; i++) {
+            printf("%02X ", resp_data[i]);
+        }
+        printf("\n");
+        if(notify_enable) bt_gatt_notify(conn, attr, resp_data, resp_size);
+    }
 	return 0;
 }
 
@@ -138,12 +151,12 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.disconnected = disconnected,
 };
 
-void init_ble() {
+int init_ble() {
     int err;
 
     err = bt_enable(bt_ready);
     if (err) {
         printf("Bluetooth init failed (err %d)\n", err);
-        return;
     }
+    return err;
 }

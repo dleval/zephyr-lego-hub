@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-void init_ble(void);
+int init_ble(void);
 
 #endif // _BLE_H
