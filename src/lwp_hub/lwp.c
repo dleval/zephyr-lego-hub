@@ -7,6 +7,7 @@
 #include "lwp_types.h"
 #include <stddef.h>
 #include <string.h>
+#include "hub.h"
 
 #include <stdio.h>
 #include <zephyr/kernel.h>
@@ -22,30 +23,33 @@ void property_response(uint8_t* rsp_data, uint16_t* rsp_size, e_property_referen
 
 e_lwp_status_t operation_hub_property(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size);
 e_lwp_status_t operation_hub_alert(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size);
+e_lwp_status_t operation_port_mode_inf(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size);
 
 e_lwp_status_t lwp_message_income(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size)
 {
-   if((in_data == NULL) || (rsp_data == NULL) || (rsp_size == NULL) || (in_size < LWP_HEADER_SIZE))
-   {
-      return LWP_ERROR_DATA;
-   }
+    if((in_data == NULL) || (rsp_data == NULL) || (rsp_size == NULL) || (in_size < LWP_HEADER_SIZE))
+    {
+        return LWP_ERROR_DATA;
+    }
 
-   //Decode Header
-   in_header_msg.lenght = get_lenght(in_data);
-   in_header_msg.hub_id = get_hub_id(in_data, in_header_msg.lenght);
-   in_header_msg.type = get_msg_type(in_data, in_header_msg.lenght);
+    //Decode Header
+    in_header_msg.lenght = get_lenght(in_data);
+    in_header_msg.hub_id = get_hub_id(in_data, in_header_msg.lenght);
+    in_header_msg.type = get_msg_type(in_data, in_header_msg.lenght);
 
-//    printf("LWP\nLenght: %d, Hub ID: %d, Type: %d\n", in_msg.header.lenght, in_msg.header.hub_id, in_msg.header.type);
+    //    printf("LWP\nLenght: %d, Hub ID: %d, Type: %d\n", in_msg.header.lenght, in_msg.header.hub_id, in_msg.header.type);
 
-   if(in_header_msg.lenght > LWP_MSG_DATA_SIZE_MAX)
-   {
-      return LWP_ERROR_MSG_LENGHT;
-   }
+    if(in_header_msg.lenght > LWP_MSG_DATA_SIZE_MAX)
+    {
+        return LWP_ERROR_MSG_LENGHT;
+    }
 
-   if(in_header_msg.type == HUB_PROPERTIES) return operation_hub_property(in_data, in_size, rsp_data, rsp_size);
-   if(in_header_msg.type == HUB_ALERTS) return operation_hub_alert(in_data, in_size, rsp_data, rsp_size);
+    if(in_header_msg.type == HUB_PROPERTIES) return operation_hub_property(in_data, in_size, rsp_data, rsp_size);
+    if(in_header_msg.type == HUB_ALERTS) return operation_hub_alert(in_data, in_size, rsp_data, rsp_size);
+    if(in_header_msg.type == PORT_MODE_INFORMATION_REQUEST) return LWP_STATUS_NO_RESP;
 
-   return LWP_UNKNOWN_TYPE;
+    printf("Unknown message type\n");
+    return LWP_UNKNOWN_TYPE;
 }
 
 uint16_t get_lenght(uint8_t* in_data)
@@ -205,7 +209,7 @@ e_lwp_status_t operation_hub_alert(uint8_t* in_data, uint16_t in_size, uint8_t* 
     if(alert_op == 0x03)
     {
         *rsp_size = 6;
-        rsp_data[0] = 5;
+        rsp_data[0] = 6;
         rsp_data[1] = 0;
         rsp_data[2] = (uint8_t)HUB_ALERTS;
         rsp_data[3] = alert_type;
@@ -213,5 +217,27 @@ e_lwp_status_t operation_hub_alert(uint8_t* in_data, uint16_t in_size, uint8_t* 
         rsp_data[5] = 0; //Status OK
         return LWP_STATUS_RESP;
     }
+    return LWP_STATUS_NO_RESP;
+}
+
+e_lwp_status_t operation_port_mode_inf(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size)
+{
+    uint8_t port_id = in_data[3];
+    e_device_type_t device_type = hub_get_attached_device_type(port_id);
+    uint8_t mode = in_data[4];
+    uint8_t info_type = in_data[5];
+
+    // *rsp_size = 6;
+    // rsp_data[0] = 6; // Define size depending on the response
+    rsp_data[1] = 0;
+    rsp_data[2] = (uint8_t)PORT_MODE_INFORMATION;
+
+    if(device_type == UNKNOWNDEVICE)
+    {
+        
+        return LWP_STATUS_RESP;
+    }
+
+
     return LWP_STATUS_NO_RESP;
 }

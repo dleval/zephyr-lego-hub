@@ -9,6 +9,7 @@
 #include <zephyr/drivers/gpio.h>
 
 #include "hub.h"
+#include "lwp_types.h"
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
@@ -19,6 +20,8 @@
  * See the sample documentation for information on how to fix this.
  */
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_NODELABEL(blinking_led), gpios);
+
+void led_output_callback(e_hub_port_t port, uint8_t data);
 
 int main(void)
 {
@@ -38,6 +41,7 @@ int main(void)
     printf("\nESP32 Lego Hub\n");
 
     hub_init();
+    hub_attach_device(LED, RGB_LED, &led_output_callback);
 
 	while (1) {
 		ret = gpio_pin_toggle_dt(&led);
@@ -50,4 +54,9 @@ int main(void)
 		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;
+}
+
+void led_output_callback(e_hub_port_t port, uint8_t data)
+{
+    printf("LED port: %d, data: %d\n", port, data);
 }

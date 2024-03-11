@@ -70,6 +70,82 @@ typedef enum
   UPDATE_UPSTREAM = 0x06,
 } e_property_operation_t;
 
+typedef enum
+{
+  A = 0x00,
+  B = 0x01,
+  AB = 0x10,
+  C = 0x02,
+  D = 0x03,
+  LED = 0x32,
+  TILT = 0x3A,
+  CURRENT = 0x3B,
+  VOLTAGE = 0x3C
+} e_hub_port_t;
+
+typedef enum
+{
+    INFO_TYPE_NAME = 0x00,
+    INFO_TYPE_RAW = 0x01,
+    INFO_TYPE_PCT = 0x02,
+    INFO_TYPE_SI = 0x03,
+    INFO_TYPE_SYMBOL = 0x04,
+    INFO_TYPE_MAPPING = 0x05,
+    INFO_TYPE_RESERVED = 0x06,
+    INFO_TYPE_MOTOR_BIAS = 0x07,
+    INFO_TYPE_CAPABILITY_BIT = 0x08,
+    INFO_TYPE_VALUE_FORMAT = 0x80,
+} e_port_mode_info_type_t;
+
+typedef enum
+{
+  UNKNOWNDEVICE = 0x0000,
+  SIMPLE_MEDIUM_LINEAR_MOTOR = 0x0001,
+  TRAIN_MOTOR = 0x0002,
+  LIGHT = 0x0008,
+  VOLTAGE_SENSOR = 0x0014,
+  CURRENT_SENSOR = 0x0015,
+  PIEZO_BUZZER = 0x0016,
+  RGB_LED = 0x0017,
+  TILT_SENSOR = 0x0022,
+  MOTION_SENSOR = 0x0023,
+  COLOR_DISTANCE_SENSOR = 0x0025,
+  MEDIUM_LINEAR_MOTOR = 0x0026,
+  MOVE_HUB_MEDIUM_LINEAR_MOTOR = 0x0027,
+  MOVE_HUB_TILT_SENSOR = 0x0028,
+  DUPLO_TRAIN_BASE_MOTOR = 0x0029,
+  DUPLO_TRAIN_BASE_SPEAKER = 0x002A,
+  DUPLO_TRAIN_BASE_COLOR_SENSOR = 43,
+  DUPLO_TRAIN_BASE_SPEEDOMETER = 44,
+  TECHNIC_LARGE_LINEAR_MOTOR = 46,   // Technic Control+
+  TECHNIC_XLARGE_LINEAR_MOTOR = 47,  // Technic Control+
+  TECHNIC_MEDIUM_ANGULAR_MOTOR = 48, // Spike Prime
+  TECHNIC_LARGE_ANGULAR_MOTOR = 49,  // Spike Prime
+  TECHNIC_MEDIUM_HUB_GEST_SENSOR = 54,
+  REMOTE_CONTROL_BUTTON = 55,
+  REMOTE_CONTROL_RSSI = 56,
+  TECHNIC_MEDIUM_HUB_ACCELEROMETER = 57,
+  TECHNIC_MEDIUM_HUB_GYRO_SENSOR = 58,
+  TECHNIC_MEDIUM_HUB_TILT_SENSOR = 59,
+  TECHNIC_MEDIUM_HUB_TEMPERATURE_SENSOR = 60,
+  TECHNIC_COLOR_SENSOR = 61,              // Spike Prime
+  TECHNIC_DISTANCE_SENSOR = 62,           // Spike Prime
+  TECHNIC_FORCE_SENSOR = 63,              // Spike Prime
+  MARIO_HUB_GESTURE_SENSOR = 71,                 // https://github.com/bricklife/LEGO-Mario-Reveng
+  MARIO_HUB_BARCODE_SENSOR = 73,          // https://github.com/bricklife/LEGO-Mario-Reveng
+  MARIO_HUB_PANT_SENSOR = 74,             // https://github.com/bricklife/LEGO-Mario-Reveng
+  TECHNIC_MEDIUM_ANGULAR_MOTOR_GREY = 75, // Mindstorms
+  TECHNIC_LARGE_ANGULAR_MOTOR_GREY = 76   // Mindstorms
+} e_device_type_t;
+
+typedef enum
+{
+  DETACHED = 0x00,
+  ATTACHED = 0x01,
+  ATTACHED_VIRTUAL = 0x02,
+} e_io_event_t;
+
+
 typedef struct {
    uint16_t lenght;
    uint8_t hub_id;
