@@ -5,6 +5,7 @@ project(esp32_lego_hub)
 
 include_directories(src
                     ../src/lwp_hub
+                    ../src/lwp_hub/devices
                     test_doubles)
 
 FILE(GLOB test_sources src/*.c)

@@ -1,0 +1,28 @@
+/**
+ * @file 0x0002_train_motor.h
+ * @author David Leval
+ * @brief Train motor device parameters
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
+#ifndef _0X0002_TRAIN_MOTOR_H_
+#define _0X0002_TRAIN_MOTOR_H_
+
+#include "devices_types.h"
+#include "lwp_types.h"
+
+const s_devices_types_t train_motor_params = {
+    .name = "LPF2-TRAIN",
+    .raw = {0x00, 0x00, 0xC8, 0xC2, 0x00, 0x00, 0xC8, 0x42},
+    .pct = {0x00, 0x00, 0xC8, 0xC2,0x00, 0x00, 0xC8, 0x42},
+    .si = {0x00, 0x00, 0xC8, 0xC2, 0x00, 0x00, 0xC8, 0x42},
+    .symbol = "",
+    .mapping = 0x0018,
+    .motor_bias = 0x00,
+    .capability_bits = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+    .value_format = {0x01, 0x00, 0x04, 0x00}
+};
+
+#endif // _0X0002_TRAIN_MOTOR_H_

@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "hub.h"
+#include "devices.h"
 
 #include <stdio.h>
 #include <zephyr/kernel.h>
@@ -37,7 +38,7 @@ e_lwp_status_t lwp_message_income(uint8_t* in_data, uint16_t in_size, uint8_t* r
     in_header_msg.hub_id = get_hub_id(in_data, in_header_msg.lenght);
     in_header_msg.type = get_msg_type(in_data, in_header_msg.lenght);
 
-    //    printf("LWP\nLenght: %d, Hub ID: %d, Type: %d\n", in_msg.header.lenght, in_msg.header.hub_id, in_msg.header.type);
+    //    printf("LWP\nLenght: %d, Hub ID: %d, Type: %d\n", in_header_msg.lenght, in_header_msg.hub_id, in_header_msg.type);
 
     if(in_header_msg.lenght > LWP_MSG_DATA_SIZE_MAX)
     {
@@ -46,7 +47,7 @@ e_lwp_status_t lwp_message_income(uint8_t* in_data, uint16_t in_size, uint8_t* r
 
     if(in_header_msg.type == HUB_PROPERTIES) return operation_hub_property(in_data, in_size, rsp_data, rsp_size);
     if(in_header_msg.type == HUB_ALERTS) return operation_hub_alert(in_data, in_size, rsp_data, rsp_size);
-    if(in_header_msg.type == PORT_MODE_INFORMATION_REQUEST) return LWP_STATUS_NO_RESP;
+    if(in_header_msg.type == PORT_MODE_INFORMATION_REQUEST) return operation_port_mode_inf(in_data, in_size, rsp_data, rsp_size);
 
     printf("Unknown message type\n");
     return LWP_UNKNOWN_TYPE;
@@ -225,19 +226,83 @@ e_lwp_status_t operation_port_mode_inf(uint8_t* in_data, uint16_t in_size, uint8
     uint8_t port_id = in_data[3];
     e_device_type_t device_type = hub_get_attached_device_type(port_id);
     uint8_t mode = in_data[4];
-    uint8_t info_type = in_data[5];
+    e_port_mode_info_type_t info_type = (e_port_mode_info_type_t)in_data[5];
+    uint16_t payload_lenght = 0;
+    const uint8_t* payload_data = NULL;
+    e_lwp_status_t status = LWP_STATUS_NO_RESP;
 
-    // *rsp_size = 6;
-    // rsp_data[0] = 6; // Define size depending on the response
-    rsp_data[1] = 0;
-    rsp_data[2] = (uint8_t)PORT_MODE_INFORMATION;
+    printf("Port mode info request: port_id %d device type %d info type %d\n", port_id, device_type, info_type);
 
-    if(device_type == UNKNOWNDEVICE)
+    switch (info_type)
     {
-        
-        return LWP_STATUS_RESP;
+        case INFO_TYPE_NAME:
+            const char* device_name = get_device_name(device_type);
+            payload_lenght = strlen(device_name);
+            payload_data = (const uint8_t*)device_name;
+            status = LWP_STATUS_RESP;
+            break;
+        case INFO_TYPE_RAW:
+            payload_lenght = sizeof(((s_devices_types_t*)0)->raw);
+            payload_data = get_device_raw(device_type);
+            status = LWP_STATUS_RESP;
+            break;
+        case INFO_TYPE_VALUE_FORMAT:
+            payload_lenght = sizeof(((s_devices_types_t*)0)->value_format);
+            payload_data = get_device_value_format(device_type);
+            status = LWP_STATUS_RESP;
+            break;
+        case INFO_TYPE_PCT:
+            payload_lenght = sizeof(((s_devices_types_t*)0)->pct);
+            payload_data = get_device_pct(device_type);
+            status = LWP_STATUS_RESP;
+            break;
+        case INFO_TYPE_SI:
+            payload_lenght = sizeof(((s_devices_types_t*)0)->si);
+            payload_data = get_device_si(device_type);
+            status = LWP_STATUS_RESP;
+            break;
+        case INFO_TYPE_SYMBOL:
+            const char* device_symbol = get_device_symbol(device_type);
+            payload_lenght = strlen(device_symbol);
+            payload_data = (const uint8_t*)device_symbol;
+            status = LWP_STATUS_RESP;
+            break;
+        case INFO_TYPE_MAPPING:
+            payload_lenght = sizeof(((s_devices_types_t*)0)->mapping);
+            payload_data = (const uint8_t*)get_device_mapping(device_type);
+            status = LWP_STATUS_RESP;
+            break;
+        case INFO_TYPE_CAPABILITY_BIT:
+            payload_lenght = sizeof(((s_devices_types_t*)0)->capability_bits);
+            payload_data = get_device_capability_bits(device_type);
+            status = LWP_STATUS_RESP;
+            break;
+        case INFO_TYPE_MOTOR_BIAS:
+            payload_lenght = sizeof(((s_devices_types_t*)0)->motor_bias);
+            payload_data = get_device_motor_bias(device_type);
+            status = LWP_STATUS_RESP;
+            break;
+        default:
+            break;
     }
 
+    if(status == LWP_STATUS_RESP)
+    {
+        *rsp_size = 6 + payload_lenght;
+        rsp_data[0] = *rsp_size; // Define size depending on the response
+        rsp_data[1] = 0;
+        rsp_data[2] = (uint8_t)PORT_MODE_INFORMATION;
+        rsp_data[3] = port_id;
+        rsp_data[4] = mode;
+        rsp_data[5] = info_type;
+        if(payload_data != NULL)
+        {
+            for(uint8_t i = 0; i < payload_lenght; i++)
+            {
+                rsp_data[i+6] = payload_data[i];
+            }
+        }
+    }
 
-    return LWP_STATUS_NO_RESP;
+    return status;
 }
