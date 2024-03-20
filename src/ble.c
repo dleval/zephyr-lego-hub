@@ -49,6 +49,7 @@ static const struct bt_data ad[] = {
 struct bt_conn *ble_conn;
 /* Notification state */
 volatile bool notify_enable;
+volatile bool ble_connected;
 
 static void mpu_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value)
 {
@@ -97,6 +98,20 @@ static ssize_t gatt_write_callback(struct bt_conn *conn,
         if(notify_enable) bt_gatt_notify(conn, attr, resp_data, resp_size);
     }
 	return 0;
+}
+
+int ble_char_notify(uint8_t* data, uint16_t size)
+{
+    if(notify_enable) {
+        int ret = bt_gatt_notify(NULL, &stsensor_svc.attrs[1], data, size);
+        printf("bt_gatt_notify: size %d ret %d data: ", size, ret);
+        for(uint16_t i = 0; i<size; i++) {
+            printf("%02X ", data[i]);
+        }
+        printf("\n");
+        return ret;
+    }
+    return -1;
 }
 
 static ssize_t gatt_read_callback(struct bt_conn *conn,
@@ -159,4 +174,12 @@ int init_ble() {
         printf("Bluetooth init failed (err %d)\n", err);
     }
     return err;
+}
+
+bool ble_is_connected(void) {
+    return ble_connected;
+}
+
+bool ble_is_notify_enable(void) {
+    return notify_enable;
 }

@@ -82,3 +82,15 @@ const uint8_t* get_device_value_format(const e_device_type_t device_id)
     const s_devices_types_t* p_devices_params = get_device_params(device_id);
     return p_devices_params->value_format;
 }
+
+const uint8_t* get_device_hw_version(const e_device_type_t device_id)
+{
+    const s_devices_types_t* p_devices_params = get_device_params(device_id);
+    return p_devices_params->hw_version;
+}
+
+const uint8_t* get_device_fw_version(const e_device_type_t device_id)
+{
+    const s_devices_types_t* p_devices_params = get_device_params(device_id);
+    return p_devices_params->fw_version;
+}

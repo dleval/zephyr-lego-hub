@@ -8,7 +8,8 @@ include_directories(src
                     src/lwp_hub/devices)
 
 FILE(GLOB app_sources src/*.c)
-FILE(GLOB lwp_hub_sources src/lwp_hub/*c)
+FILE(GLOB lwp_hub_sources src/lwp_hub/*c
+                          src/lwp_hub/devices/*.c)
 target_sources(app PRIVATE
   ${app_sources}
   ${lwp_hub_sources}

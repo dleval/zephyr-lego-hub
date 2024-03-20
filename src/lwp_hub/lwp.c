@@ -25,6 +25,9 @@ void property_response(uint8_t* rsp_data, uint16_t* rsp_size, e_property_referen
 e_lwp_status_t operation_hub_property(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size);
 e_lwp_status_t operation_hub_alert(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size);
 e_lwp_status_t operation_port_mode_inf(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size);
+e_lwp_status_t operation_port_inf(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size);
+e_lwp_status_t operation_port_input_format(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size);
+e_lwp_status_t operation_port_output(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size);
 
 e_lwp_status_t lwp_message_income(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size)
 {
@@ -48,6 +51,9 @@ e_lwp_status_t lwp_message_income(uint8_t* in_data, uint16_t in_size, uint8_t* r
     if(in_header_msg.type == HUB_PROPERTIES) return operation_hub_property(in_data, in_size, rsp_data, rsp_size);
     if(in_header_msg.type == HUB_ALERTS) return operation_hub_alert(in_data, in_size, rsp_data, rsp_size);
     if(in_header_msg.type == PORT_MODE_INFORMATION_REQUEST) return operation_port_mode_inf(in_data, in_size, rsp_data, rsp_size);
+    if(in_header_msg.type == PORT_INFORMATION_REQUEST) return operation_port_inf(in_data, in_size, rsp_data, rsp_size);
+    if(in_header_msg.type == PORT_INPUT_FORMAT_SETUP_SINGLE) return operation_port_input_format(in_data, in_size, rsp_data, rsp_size);
+    if(in_header_msg.type == PORT_OUTPUT_COMMAND) return operation_port_output(in_data, in_size, rsp_data, rsp_size);
 
     printf("Unknown message type\n");
     return LWP_UNKNOWN_TYPE;
@@ -202,6 +208,33 @@ e_lwp_status_t operation_hub_property(uint8_t* in_data, uint16_t in_size, uint8_
    return status;
 }
 
+e_lwp_status_t lwp_attach_device_notify(uint8_t port, uint16_t device_type, uint8_t* rsp_data, uint16_t* rsp_size)
+{
+    const uint8_t* hw_version_data = NULL;
+    const uint8_t* fw_version_data = NULL;
+
+    *rsp_size = 15;
+    rsp_data[0] = 15;
+    rsp_data[1] = 0;
+    rsp_data[2] = (uint8_t)HUB_ATTACHED_IO;
+    rsp_data[3] = port;
+    rsp_data[4] = (uint8_t)ATTACHED;
+    rsp_data[5] = (uint8_t)(device_type & 0xFF);
+    rsp_data[6] = (uint8_t)(device_type >> 8);
+    hw_version_data = get_device_hw_version((e_device_type_t)device_type);
+    fw_version_data = get_device_fw_version((e_device_type_t)device_type);
+    if((hw_version_data != NULL) && (fw_version_data != NULL))
+    {
+        for(uint8_t i = 0; i < 4; i++)
+        {
+            rsp_data[i+7] = hw_version_data[i];
+            rsp_data[i+11] = fw_version_data[i];
+        }
+        return LWP_STATUS_RESP;
+    }
+    return LWP_STATUS_NO_RESP;
+}
+
 e_lwp_status_t operation_hub_alert(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size)
 {
     uint8_t alert_type = in_data[3];
@@ -223,15 +256,17 @@ e_lwp_status_t operation_hub_alert(uint8_t* in_data, uint16_t in_size, uint8_t* 
 
 e_lwp_status_t operation_port_mode_inf(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size)
 {
+    if(in_size != 6) return LWP_ERROR_MSG_LENGHT;
+
+    e_lwp_status_t status = LWP_STATUS_NO_RESP;
     uint8_t port_id = in_data[3];
     e_device_type_t device_type = hub_get_attached_device_type(port_id);
     uint8_t mode = in_data[4];
     e_port_mode_info_type_t info_type = (e_port_mode_info_type_t)in_data[5];
     uint16_t payload_lenght = 0;
     const uint8_t* payload_data = NULL;
-    e_lwp_status_t status = LWP_STATUS_NO_RESP;
 
-    printf("Port mode info request: port_id %d device type %d info type %d\n", port_id, device_type, info_type);
+    // printf("Port mode info request: port_id %d device type %d info type %d\n", port_id, device_type, info_type);
 
     switch (info_type)
     {
@@ -305,4 +340,142 @@ e_lwp_status_t operation_port_mode_inf(uint8_t* in_data, uint16_t in_size, uint8
     }
 
     return status;
+}
+
+e_lwp_status_t operation_port_inf(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size)
+{
+    if(in_size != 5) return LWP_ERROR_MSG_LENGHT;
+
+    e_lwp_status_t status = LWP_STATUS_NO_RESP;
+
+    uint8_t port_id = in_data[3];
+    e_device_type_t device_type = hub_get_attached_device_type(port_id);
+    uint8_t info_type = in_data[4];
+
+    switch(info_type)
+    {
+        case 0x00: //Port value
+            break;
+        case 0x01: //Mode info
+            break;
+        case 0x02: //Possible mode combinations
+            break;
+        default:
+            break;
+    }
+
+    return status;
+}
+
+e_lwp_status_t operation_port_input_format(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size)
+{
+    if(in_size != 10) return LWP_ERROR_MSG_LENGHT;
+
+    uint8_t port_id = in_data[3];
+    uint8_t mode = in_data[4];
+    uint32_t delta_interval = (uint32_t)(in_data[5] | (in_data[6] << 8) | (in_data[7] << 16) | (in_data[8] << 24));
+    uint8_t notification_enabled = in_data[9];
+
+    printf("Port input format: port_id %d mode %d delta_interval %d notification_enabled %d\n", port_id, mode, delta_interval, notification_enabled);
+
+    hub_set_delta_interval(port_id, delta_interval);
+    hub_set_notification(port_id, notification_enabled);
+
+    *rsp_size = 10;
+    rsp_data[0] = *rsp_size;
+    rsp_data[1] = 0;
+    rsp_data[2] = (uint8_t)PORT_INPUT_FORMAT_SINGLE;
+    rsp_data[3] = port_id;
+    rsp_data[4] = mode;
+    rsp_data[5] = (uint8_t)(delta_interval & 0xFF);
+    rsp_data[6] = (uint8_t)((delta_interval >> 8) & 0xFF);
+    rsp_data[7] = (uint8_t)((delta_interval >> 16) & 0xFF);
+    rsp_data[8] = (uint8_t)((delta_interval >> 24) & 0xFF);
+    rsp_data[9] = notification_enabled;
+
+    return LWP_STATUS_RESP;
+
+}
+
+e_lwp_status_t operation_port_output(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size)
+{
+    if(in_size < 6) return LWP_ERROR_MSG_LENGHT;
+
+    e_lwp_status_t status = LWP_STATUS_NO_RESP;
+
+    uint8_t port_id = in_data[3];
+    uint8_t start_completion_info = in_data[4];
+    e_port_output_subcommand_t subcommand = (e_port_output_subcommand_t)in_data[5];
+
+    e_port_feedback_message_t feedback = hub_device_callback(port_id, subcommand, &in_data[6], (uint8_t)(in_size - 6));
+
+    if((start_completion_info & 0x01) != 0x00) // Command feedback (status) requested
+    {
+        *rsp_size = 5;
+        rsp_data[0] = 4;
+        rsp_data[1] = 0;
+        rsp_data[2] = (uint8_t)PORT_OUTPUT_COMMAND_FEEDBACK;
+        rsp_data[3] = port_id;
+        rsp_data[4] = (uint8_t)feedback; // Command feedback (status) requested
+        status = LWP_STATUS_RESP;
+    }
+
+    return status;
+}
+
+e_lwp_status_t lwp_port_value_uint8(uint8_t port, uint8_t value, uint8_t* rsp_data, uint16_t* rsp_size)
+{
+    *rsp_size = 5;
+    rsp_data[0] = *rsp_size;
+    rsp_data[1] = 0;
+    rsp_data[2] = (uint8_t)PORT_VALUE_SINGLE;
+    rsp_data[3] = port;
+    rsp_data[4] = value;
+
+    return LWP_STATUS_RESP;
+}
+
+e_lwp_status_t lwp_port_value_uint16(uint8_t port, uint16_t value, uint8_t* rsp_data, uint16_t* rsp_size)
+{
+    *rsp_size = 6;
+    rsp_data[0] = *rsp_size;
+    rsp_data[1] = 0;
+    rsp_data[2] = (uint8_t)PORT_VALUE_SINGLE;
+    rsp_data[3] = port;
+    rsp_data[4] = (uint8_t)((value >> 8) & 0xFF);
+    rsp_data[5] = (uint8_t)(value & 0xFF);
+    
+
+    return LWP_STATUS_RESP;
+}
+
+e_lwp_status_t lwp_port_value_uint32(uint8_t port, uint32_t value, uint8_t* rsp_data, uint16_t* rsp_size)
+{
+    *rsp_size = 8;
+    rsp_data[0] = *rsp_size;
+    rsp_data[1] = 0;
+    rsp_data[2] = (uint8_t)PORT_VALUE_SINGLE;
+    rsp_data[3] = port;
+    rsp_data[4] = (uint8_t)((value >> 24) & 0xFF);
+    rsp_data[5] = (uint8_t)((value >> 16) & 0xFF);
+    rsp_data[6] = (uint8_t)((value >> 8) & 0xFF);
+    rsp_data[7] = (uint8_t)(value & 0xFF);
+
+    return LWP_STATUS_RESP;
+}
+
+e_lwp_status_t lwp_port_value_float(uint8_t port, float value, uint8_t* rsp_data, uint16_t* rsp_size)
+{
+    *rsp_size = 8;
+    rsp_data[0] = *rsp_size;
+    rsp_data[1] = 0;
+    rsp_data[2] = (uint8_t)PORT_VALUE_SINGLE;
+    rsp_data[3] = port;
+    uint32_t value_int = (uint32_t)value;
+    rsp_data[4] = (uint8_t)((value_int >> 24) & 0xFF);
+    rsp_data[5] = (uint8_t)((value_int >> 16) & 0xFF);
+    rsp_data[6] = (uint8_t)((value_int >> 8) & 0xFF);
+    rsp_data[7] = (uint8_t)(value_int & 0xFF);
+
+    return LWP_STATUS_RESP;
 }

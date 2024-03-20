@@ -33,9 +33,10 @@ ZTEST(tests_lwp, test_property_get_advertising_name)
 /**
  * @brief Test read port mode information
  */
-void tests_lwp_led_output_callback(e_hub_port_t port, uint8_t data)
+e_port_feedback_message_t tests_lwp_led_output_callback(e_hub_port_t port, e_port_output_subcommand_t subcmd, uint8_t* data, uint8_t size)
 {
-    //dummy
+    //fake
+    return BUFFER_EMPTY_AND_COMMAND_COMPLETED | IDLE;
 }
 ZTEST(tests_lwp, test_read_port_mode_info_name)
 {

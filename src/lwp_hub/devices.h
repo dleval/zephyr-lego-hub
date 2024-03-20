@@ -22,5 +22,7 @@ const uint16_t* get_device_mapping(const e_device_type_t device_id);
 const uint8_t* get_device_motor_bias(const e_device_type_t device_id);
 const uint8_t* get_device_capability_bits(const e_device_type_t device_id);
 const uint8_t* get_device_value_format(const e_device_type_t device_id);
+const uint8_t* get_device_hw_version(const e_device_type_t device_id);
+const uint8_t* get_device_fw_version(const e_device_type_t device_id);
 
 #endif // _DEVICES_H_

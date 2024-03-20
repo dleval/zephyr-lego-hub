@@ -22,6 +22,8 @@ typedef struct
     uint8_t motor_bias;
     uint8_t capability_bits[6];
     uint8_t value_format[4];
+    uint8_t hw_version[4];
+    uint8_t fw_version[4];
     
 } s_devices_types_t;
 

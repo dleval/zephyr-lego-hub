@@ -41,3 +41,8 @@ typedef enum {
  * @return e_lwp_status_t Indicate if a response is available
  */
 e_lwp_status_t lwp_message_income(uint8_t* in_data, uint16_t in_size, uint8_t* rsp_data, uint16_t* rsp_size);
+e_lwp_status_t lwp_attach_device_notify(uint8_t port, uint16_t device_type, uint8_t* rsp_data, uint16_t* rsp_size);
+e_lwp_status_t lwp_port_value_uint8(uint8_t port, uint8_t value, uint8_t* rsp_data, uint16_t* rsp_size);
+e_lwp_status_t lwp_port_value_uint16(uint8_t port, uint16_t value, uint8_t* rsp_data, uint16_t* rsp_size);
+e_lwp_status_t lwp_port_value_uint32(uint8_t port, uint32_t value, uint8_t* rsp_data, uint16_t* rsp_size);
+e_lwp_status_t lwp_port_value_float(uint8_t port, float value, uint8_t* rsp_data, uint16_t* rsp_size);

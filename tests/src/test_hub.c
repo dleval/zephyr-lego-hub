@@ -38,9 +38,10 @@ ZTEST(tests_hub, test_init_hub)
 /**
  * @brief Test hub attach device
  */
-void led_output_callback(e_hub_port_t port, uint8_t data)
+e_port_feedback_message_t led_output_callback(e_hub_port_t port, e_port_output_subcommand_t subcmd, uint8_t* data, uint8_t size)
 {
-    //dummy
+    //fake
+    return BUFFER_EMPTY_AND_COMMAND_COMPLETED | IDLE;
 }
 ZTEST(tests_hub, test_attach_device)
 {
